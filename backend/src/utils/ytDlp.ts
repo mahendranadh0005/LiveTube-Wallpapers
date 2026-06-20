@@ -4,8 +4,12 @@ import https from 'https';
 import { spawn } from 'child_process';
 import { BIN_DIR, ensureDirsExist } from './storage';
 
-const YT_DLP_PATH = path.join(BIN_DIR, 'yt-dlp.exe');
-const YT_DLP_URL = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe';
+const isWindows = process.platform === 'win32';
+const YT_DLP_BINARY = isWindows ? 'yt-dlp.exe' : 'yt-dlp';
+const YT_DLP_PATH = path.join(BIN_DIR, YT_DLP_BINARY);
+const YT_DLP_URL = isWindows
+  ? 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe'
+  : 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
 
 // Helper to download with redirect support
 export function downloadFile(url: string, dest: string): Promise<void> {
@@ -52,13 +56,20 @@ export async function ensureYtDlpInstalled(): Promise<string> {
     return YT_DLP_PATH;
   }
 
-  console.log(`[yt-dlp] Downloading yt-dlp.exe from ${YT_DLP_URL}...`);
+  console.log(`[yt-dlp] Downloading yt-dlp binary from ${YT_DLP_URL}...`);
   try {
     await downloadFile(YT_DLP_URL, YT_DLP_PATH);
     console.log(`[yt-dlp] Download complete! Saved to ${YT_DLP_PATH}`);
+    
+    // Set executable permissions on Linux/macOS
+    if (!isWindows) {
+      fs.chmodSync(YT_DLP_PATH, '755');
+      console.log(`[yt-dlp] Set executable permissions (chmod 755)`);
+    }
+    
     return YT_DLP_PATH;
   } catch (err) {
-    console.error(`[yt-dlp] Failed to download yt-dlp.exe:`, err);
+    console.error(`[yt-dlp] Failed to download yt-dlp binary:`, err);
     throw err;
   }
 }

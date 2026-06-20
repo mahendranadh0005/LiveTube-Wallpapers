@@ -68,3 +68,34 @@ If your system blocks executing PowerShell scripts (like `npm.ps1`), use `npm.cm
 
 ### FFmpeg Subtitle Paths
 To burn subtitles into video on Windows, absolute path backslashes can fail in FFmpeg commands. The backend resolves this by calculating relative paths using forward slashes (e.g., `temp/yt-sub-xxx.srt`), which works reliably out-of-the-box.
+
+---
+
+## 🚀 Cloud Deployment (Vercel & Render)
+
+To deploy the full-stack app, you can host the **Frontend on Vercel** and the **Backend on Render**.
+
+### 1. Deploy Backend to Render (Docker Method - Recommended)
+
+Because video processing requires **FFmpeg** and **Python3** (for `yt-dlp` to run on Linux), the standard Node environment on Render lacks these binaries. Deploying using the provided `Dockerfile` installs them automatically.
+
+1. Create a new **Web Service** on Render connected to your Git repository.
+2. If your repository contains only the `/backend` folder (or if you point the Root Directory setting to `backend`):
+   - Set **Environment / Runtime** to `Docker` (Render will automatically detect `Dockerfile`).
+   - Leave build and start commands blank (Docker config handles it).
+3. Under **Advanced Settings**, add the environment variable:
+   - `PORT` = `5000`
+4. Deploy. Render will spin up the container and host it on `https://your-backend-name.onrender.com`.
+
+*(Alternative Node Native Method)*:
+If deploying as a Node Web Service:
+- Change the **Build Command** to: `npm install && npm run build` (This installs devDependencies and compiles TypeScript).
+- Change the **Start Command** to: `npm start` (This executes the compiled code `node dist/index.js` instead of using development-only nodemon).
+- *Note: You must add a Render FFmpeg Buildpack to install FFmpeg on the server.*
+
+### 2. Deploy Frontend to Vercel
+
+1. Create a new project on Vercel, connect your Git repository, and choose the `frontend` directory.
+2. In the configuration settings, add the following **Environment Variable**:
+   - `NEXT_PUBLIC_API_URL` = `https://your-backend-name.onrender.com/api` (pointing to your deployed Render URL).
+3. Click **Deploy**.
