@@ -87,20 +87,33 @@ function downloadFile(url, dest) {
         request(url);
     });
 }
-function isGlobalYtDlpAvailable() {
+function getGlobalYtDlpPath() {
     try {
         (0, child_process_1.execSync)(isWindows ? 'where yt-dlp' : 'which yt-dlp', { stdio: 'ignore' });
-        return true;
+        return 'yt-dlp';
     }
-    catch (e) {
-        return false;
+    catch (e) { }
+    if (!isWindows) {
+        const commonPaths = [
+            '/usr/local/bin/yt-dlp',
+            '/usr/bin/yt-dlp',
+            '/root/.local/bin/yt-dlp',
+            '/app/.local/bin/yt-dlp',
+        ];
+        for (const p of commonPaths) {
+            if (fs_1.default.existsSync(p)) {
+                return p;
+            }
+        }
     }
+    return null;
 }
 async function ensureYtDlpInstalled() {
     // If yt-dlp is installed globally (e.g. via pip in the Docker container), use it directly
-    if (isGlobalYtDlpAvailable()) {
-        console.log(`[yt-dlp] Using globally installed yt-dlp from system PATH`);
-        return 'yt-dlp';
+    const globalPath = getGlobalYtDlpPath();
+    if (globalPath) {
+        console.log(`[yt-dlp] Using globally installed yt-dlp at: ${globalPath}`);
+        return globalPath;
     }
     (0, storage_1.ensureDirsExist)();
     if (fs_1.default.existsSync(YT_DLP_PATH)) {
