@@ -87,7 +87,21 @@ function downloadFile(url, dest) {
         request(url);
     });
 }
+function isGlobalYtDlpAvailable() {
+    try {
+        (0, child_process_1.execSync)(isWindows ? 'where yt-dlp' : 'which yt-dlp', { stdio: 'ignore' });
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
 async function ensureYtDlpInstalled() {
+    // If yt-dlp is installed globally (e.g. via pip in the Docker container), use it directly
+    if (isGlobalYtDlpAvailable()) {
+        console.log(`[yt-dlp] Using globally installed yt-dlp from system PATH`);
+        return 'yt-dlp';
+    }
     (0, storage_1.ensureDirsExist)();
     if (fs_1.default.existsSync(YT_DLP_PATH)) {
         return YT_DLP_PATH;

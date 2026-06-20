@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { BIN_DIR, BACKEND_DIR, TEMP_DIR, ensureDirsExist } from './storage';
 
 const isWindows = process.platform === 'win32';
@@ -87,7 +87,22 @@ export function downloadFile(url: string, dest: string): Promise<void> {
   });
 }
 
+function isGlobalYtDlpAvailable(): boolean {
+  try {
+    execSync(isWindows ? 'where yt-dlp' : 'which yt-dlp', { stdio: 'ignore' });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 export async function ensureYtDlpInstalled(): Promise<string> {
+  // If yt-dlp is installed globally (e.g. via pip in the Docker container), use it directly
+  if (isGlobalYtDlpAvailable()) {
+    console.log(`[yt-dlp] Using globally installed yt-dlp from system PATH`);
+    return 'yt-dlp';
+  }
+
   ensureDirsExist();
   if (fs.existsSync(YT_DLP_PATH)) {
     return YT_DLP_PATH;
