@@ -11,6 +11,28 @@ const YT_DLP_URL = isWindows
   ? 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe'
   : 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
 
+// Find cookies.txt in multiple possible paths for local and cloud environments
+export function findCookiesFile(): string | null {
+  const possiblePaths = [
+    path.join(BACKEND_DIR, 'cookies.txt'),
+    path.join(process.cwd(), 'cookies.txt'),
+    path.join(BACKEND_DIR, '..', 'cookies.txt'),
+    '/opt/render/project/src/cookies.txt',
+    '/app/cookies.txt',
+    '/opt/render/project/src/backend/cookies.txt',
+  ];
+
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      console.log(`[yt-dlp] Found cookies.txt file at: ${p}`);
+      return p;
+    }
+  }
+  
+  console.log(`[yt-dlp] cookies.txt not found in checked locations: ${possiblePaths.join(', ')}`);
+  return null;
+}
+
 // Helper to download with redirect support
 export function downloadFile(url: string, dest: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -88,13 +110,13 @@ export async function getVideoInfo(url: string): Promise<VideoMetadata> {
 
   return new Promise((resolve, reject) => {
     const args = ['--dump-json'];
-    const cookiesPath = path.join(BACKEND_DIR, 'cookies.txt');
-    if (fs.existsSync(cookiesPath)) {
+    const cookiesPath = findCookiesFile();
+    if (cookiesPath) {
       args.push('--cookies', cookiesPath);
     }
     args.push(url);
 
-    console.log(`[yt-dlp] Querying metadata: yt-dlp ${args.map(a => a.endsWith('cookies.txt') ? 'cookies.txt' : a).join(' ')}`);
+    console.log(`[yt-dlp] Querying metadata: yt-dlp ${args.map(a => a.includes('cookies.txt') ? 'cookies.txt' : a).join(' ')}`);
     const proc = spawn(ytDlpPath, args);
     let stdout = '';
     let stderr = '';
@@ -177,8 +199,8 @@ export async function downloadVideo(options: DownloadOptions): Promise<{ videoPa
       '-o', options.outputPath,
     ];
 
-    const cookiesPath = path.join(BACKEND_DIR, 'cookies.txt');
-    if (fs.existsSync(cookiesPath)) {
+    const cookiesPath = findCookiesFile();
+    if (cookiesPath) {
       args.push('--cookies', cookiesPath);
     }
 

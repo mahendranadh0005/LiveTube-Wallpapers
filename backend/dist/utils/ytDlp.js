@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.findCookiesFile = findCookiesFile;
 exports.downloadFile = downloadFile;
 exports.ensureYtDlpInstalled = ensureYtDlpInstalled;
 exports.getVideoInfo = getVideoInfo;
@@ -18,6 +19,25 @@ const YT_DLP_PATH = path_1.default.join(storage_1.BIN_DIR, YT_DLP_BINARY);
 const YT_DLP_URL = isWindows
     ? 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe'
     : 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
+// Find cookies.txt in multiple possible paths for local and cloud environments
+function findCookiesFile() {
+    const possiblePaths = [
+        path_1.default.join(storage_1.BACKEND_DIR, 'cookies.txt'),
+        path_1.default.join(process.cwd(), 'cookies.txt'),
+        path_1.default.join(storage_1.BACKEND_DIR, '..', 'cookies.txt'),
+        '/opt/render/project/src/cookies.txt',
+        '/app/cookies.txt',
+        '/opt/render/project/src/backend/cookies.txt',
+    ];
+    for (const p of possiblePaths) {
+        if (fs_1.default.existsSync(p)) {
+            console.log(`[yt-dlp] Found cookies.txt file at: ${p}`);
+            return p;
+        }
+    }
+    console.log(`[yt-dlp] cookies.txt not found in checked locations: ${possiblePaths.join(', ')}`);
+    return null;
+}
 // Helper to download with redirect support
 function downloadFile(url, dest) {
     return new Promise((resolve, reject) => {
@@ -77,12 +97,12 @@ async function getVideoInfo(url) {
     const ytDlpPath = await ensureYtDlpInstalled();
     return new Promise((resolve, reject) => {
         const args = ['--dump-json'];
-        const cookiesPath = path_1.default.join(storage_1.BACKEND_DIR, 'cookies.txt');
-        if (fs_1.default.existsSync(cookiesPath)) {
+        const cookiesPath = findCookiesFile();
+        if (cookiesPath) {
             args.push('--cookies', cookiesPath);
         }
         args.push(url);
-        console.log(`[yt-dlp] Querying metadata: yt-dlp ${args.map(a => a.endsWith('cookies.txt') ? 'cookies.txt' : a).join(' ')}`);
+        console.log(`[yt-dlp] Querying metadata: yt-dlp ${args.map(a => a.includes('cookies.txt') ? 'cookies.txt' : a).join(' ')}`);
         const proc = (0, child_process_1.spawn)(ytDlpPath, args);
         let stdout = '';
         let stderr = '';
@@ -145,8 +165,8 @@ async function downloadVideo(options) {
             '--merge-output-format', 'mp4',
             '-o', options.outputPath,
         ];
-        const cookiesPath = path_1.default.join(storage_1.BACKEND_DIR, 'cookies.txt');
-        if (fs_1.default.existsSync(cookiesPath)) {
+        const cookiesPath = findCookiesFile();
+        if (cookiesPath) {
             args.push('--cookies', cookiesPath);
         }
         // Handle sections download if requested (requires ffmpeg available on system path)
