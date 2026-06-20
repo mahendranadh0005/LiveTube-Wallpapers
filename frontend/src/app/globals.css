@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+:root {
+  --background: #06040a;
+  --foreground: #f3f1f6;
+  
+  --primary: #9d4edd;
+  --primary-glow: rgba(157, 78, 221, 0.4);
+  --secondary: #3a86c8;
+  --secondary-glow: rgba(58, 134, 200, 0.4);
+  --accent: #ff007f;
+  
+  --card-bg: rgba(15, 10, 25, 0.45);
+  --card-border: rgba(157, 78, 221, 0.15);
+  
+  --glass-bg: rgba(10, 8, 18, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+  
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(10, 8, 18, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(157, 78, 221, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(157, 78, 221, 0.6);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Custom glassmorphism classes */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+.glass-card:hover {
+  border-color: rgba(157, 78, 221, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(157, 78, 221, 0.1);
+}
+
+/* Custom glowing effects */
+.glow-primary {
+  text-shadow: 0 0 10px var(--primary-glow), 0 0 20px var(--primary-glow);
+}
+
+.glow-secondary {
+  text-shadow: 0 0 10px var(--secondary-glow), 0 0 20px var(--secondary-glow);
+}
+
+.box-glow-primary {
+  box-shadow: 0 0 15px 0 var(--primary-glow);
+}
+
+.box-glow-secondary {
+  box-shadow: 0 0 15px 0 var(--secondary-glow);
+}
+
+/* Animations */
+@keyframes drift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: drift 10s ease infinite;
+}
+
+.editor-timeline-handle {
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+.editor-timeline-handle:active {
+  transform: scale(1.2);
+}
