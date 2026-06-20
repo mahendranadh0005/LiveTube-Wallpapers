@@ -24,6 +24,7 @@ function findCookiesFile() {
     const possiblePaths = [
         path_1.default.join(storage_1.BACKEND_DIR, 'cookies.txt'),
         path_1.default.join(process.cwd(), 'cookies.txt'),
+        '/etc/secrets/cookies.txt', // Render default secrets mount directory
         path_1.default.join(storage_1.BACKEND_DIR, '..', 'cookies.txt'),
         '/opt/render/project/src/cookies.txt',
         '/app/cookies.txt',
