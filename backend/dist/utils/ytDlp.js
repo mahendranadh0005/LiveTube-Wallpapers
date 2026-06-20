@@ -111,7 +111,7 @@ async function ensureYtDlpInstalled() {
 async function getVideoInfo(url) {
     const ytDlpPath = await ensureYtDlpInstalled();
     return new Promise((resolve, reject) => {
-        const args = ['--dump-json'];
+        const args = ['--dump-json', '--js-runtimes', 'node'];
         const cookiesPath = findCookiesFile();
         if (cookiesPath) {
             args.push('--cookies', cookiesPath);
@@ -179,6 +179,7 @@ async function downloadVideo(options) {
             '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             '--merge-output-format', 'mp4',
             '-o', options.outputPath,
+            '--js-runtimes', 'node',
         ];
         const cookiesPath = findCookiesFile();
         if (cookiesPath) {
