@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import { spawn } from 'child_process';
-import { BIN_DIR, BACKEND_DIR, ensureDirsExist } from './storage';
+import { BIN_DIR, BACKEND_DIR, TEMP_DIR, ensureDirsExist } from './storage';
 
 const isWindows = process.platform === 'win32';
 const YT_DLP_BINARY = isWindows ? 'yt-dlp.exe' : 'yt-dlp';
@@ -26,7 +26,21 @@ export function findCookiesFile(): string | null {
   for (const p of possiblePaths) {
     if (fs.existsSync(p)) {
       console.log(`[yt-dlp] Found cookies.txt file at: ${p}`);
-      return p;
+      
+      // Copy to writeable TEMP_DIR to prevent read-only filesystem crashes
+      const writeablePath = path.join(TEMP_DIR, 'cookies-active.txt');
+      try {
+        fs.copyFileSync(p, writeablePath);
+        // On Linux, make it writeable for the running process
+        if (process.platform !== 'win32') {
+          fs.chmodSync(writeablePath, '666');
+        }
+        console.log(`[yt-dlp] Copied cookies.txt to writeable path: ${writeablePath}`);
+        return writeablePath;
+      } catch (err) {
+        console.error(`[yt-dlp] Failed to copy cookies to writeable location, falling back to original path:`, err);
+        return p;
+      }
     }
   }
   

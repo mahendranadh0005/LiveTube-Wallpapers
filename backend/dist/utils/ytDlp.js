@@ -33,7 +33,21 @@ function findCookiesFile() {
     for (const p of possiblePaths) {
         if (fs_1.default.existsSync(p)) {
             console.log(`[yt-dlp] Found cookies.txt file at: ${p}`);
-            return p;
+            // Copy to writeable TEMP_DIR to prevent read-only filesystem crashes
+            const writeablePath = path_1.default.join(storage_1.TEMP_DIR, 'cookies-active.txt');
+            try {
+                fs_1.default.copyFileSync(p, writeablePath);
+                // On Linux, make it writeable for the running process
+                if (process.platform !== 'win32') {
+                    fs_1.default.chmodSync(writeablePath, '666');
+                }
+                console.log(`[yt-dlp] Copied cookies.txt to writeable path: ${writeablePath}`);
+                return writeablePath;
+            }
+            catch (err) {
+                console.error(`[yt-dlp] Failed to copy cookies to writeable location, falling back to original path:`, err);
+                return p;
+            }
         }
     }
     console.log(`[yt-dlp] cookies.txt not found in checked locations: ${possiblePaths.join(', ')}`);
