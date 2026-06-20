@@ -10,14 +10,15 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package configuration
 COPY package*.json ./
 
-# Install dependencies (both dev and prod, needed for build step)
+# Install dependencies in the container
 RUN npm install
 
-# Copy the rest of the application code
-COPY . .
+# Copy TypeScript configuration and source code explicitly
+COPY tsconfig.json ./
+COPY src ./src
 
 # Compile TypeScript to JavaScript
 RUN npm run build
