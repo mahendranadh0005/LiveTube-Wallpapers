@@ -76,7 +76,14 @@ async function ensureYtDlpInstalled() {
 async function getVideoInfo(url) {
     const ytDlpPath = await ensureYtDlpInstalled();
     return new Promise((resolve, reject) => {
-        const proc = (0, child_process_1.spawn)(ytDlpPath, ['--dump-json', url]);
+        const args = ['--dump-json'];
+        const cookiesPath = path_1.default.join(storage_1.BACKEND_DIR, 'cookies.txt');
+        if (fs_1.default.existsSync(cookiesPath)) {
+            args.push('--cookies', cookiesPath);
+        }
+        args.push(url);
+        console.log(`[yt-dlp] Querying metadata: yt-dlp ${args.map(a => a.endsWith('cookies.txt') ? 'cookies.txt' : a).join(' ')}`);
+        const proc = (0, child_process_1.spawn)(ytDlpPath, args);
         let stdout = '';
         let stderr = '';
         proc.stdout.on('data', (data) => {
@@ -138,6 +145,10 @@ async function downloadVideo(options) {
             '--merge-output-format', 'mp4',
             '-o', options.outputPath,
         ];
+        const cookiesPath = path_1.default.join(storage_1.BACKEND_DIR, 'cookies.txt');
+        if (fs_1.default.existsSync(cookiesPath)) {
+            args.push('--cookies', cookiesPath);
+        }
         // Handle sections download if requested (requires ffmpeg available on system path)
         if (options.startSec !== undefined && options.endSec !== undefined) {
             args.push('--download-sections', `*${options.startSec}-${options.endSec}`);

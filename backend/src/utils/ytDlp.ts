@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 import { spawn } from 'child_process';
-import { BIN_DIR, ensureDirsExist } from './storage';
+import { BIN_DIR, BACKEND_DIR, ensureDirsExist } from './storage';
 
 const isWindows = process.platform === 'win32';
 const YT_DLP_BINARY = isWindows ? 'yt-dlp.exe' : 'yt-dlp';
@@ -87,7 +87,15 @@ export async function getVideoInfo(url: string): Promise<VideoMetadata> {
   const ytDlpPath = await ensureYtDlpInstalled();
 
   return new Promise((resolve, reject) => {
-    const proc = spawn(ytDlpPath, ['--dump-json', url]);
+    const args = ['--dump-json'];
+    const cookiesPath = path.join(BACKEND_DIR, 'cookies.txt');
+    if (fs.existsSync(cookiesPath)) {
+      args.push('--cookies', cookiesPath);
+    }
+    args.push(url);
+
+    console.log(`[yt-dlp] Querying metadata: yt-dlp ${args.map(a => a.endsWith('cookies.txt') ? 'cookies.txt' : a).join(' ')}`);
+    const proc = spawn(ytDlpPath, args);
     let stdout = '';
     let stderr = '';
 
@@ -168,6 +176,11 @@ export async function downloadVideo(options: DownloadOptions): Promise<{ videoPa
       '--merge-output-format', 'mp4',
       '-o', options.outputPath,
     ];
+
+    const cookiesPath = path.join(BACKEND_DIR, 'cookies.txt');
+    if (fs.existsSync(cookiesPath)) {
+      args.push('--cookies', cookiesPath);
+    }
 
     // Handle sections download if requested (requires ffmpeg available on system path)
     if (options.startSec !== undefined && options.endSec !== undefined) {
