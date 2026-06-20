@@ -157,10 +157,11 @@ export function processVideo(options: ProcessOptions, onProgress?: (percent: num
     // Output fps, video codec and settings for premium compatibility (H.264 mp4)
     args.push('-r', options.fps.toString());
     args.push('-c:v', 'libx264');
-    args.push('-preset', 'medium'); // fast, medium, slow
-    args.push('-crf', '18'); // visually lossless compression
+    args.push('-preset', 'veryfast'); // lighter memory footprint to prevent Render OOM
+    args.push('-crf', '22'); // visually excellent quality, less memory overhead
     args.push('-pix_fmt', 'yuv420p'); // essential for mobile/windows player support
     args.push('-an'); // remove audio (standard for wallpapers)
+    args.push('-threads', '1'); // limit threads to 1 to stay within Render's 512MB RAM limit
     args.push('-y'); // overwrite output
     args.push(options.outputPath);
 
